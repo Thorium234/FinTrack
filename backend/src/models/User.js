@@ -40,3 +40,40 @@ export async function findUserById(id) {
 
   return rows[0];
 }
+
+export async function setResetToken(userId, token, expiresAt) {
+  await pool.execute(
+    `
+    UPDATE users
+    SET reset_token = ?, reset_token_expires = ?
+    WHERE id = ?
+    `,
+    [token, expiresAt, userId]
+  );
+}
+
+export async function findUserByResetToken(token) {
+  const [rows] = await pool.execute(
+    `
+    SELECT id, name, email
+    FROM users
+    WHERE reset_token = ?
+      AND reset_token_expires > NOW()
+    LIMIT 1
+    `,
+    [token]
+  );
+
+  return rows[0];
+}
+
+export async function updateUserPassword(userId, passwordHash) {
+  await pool.execute(
+    `
+    UPDATE users
+    SET password_hash = ?, reset_token = NULL, reset_token_expires = NULL, updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+    `,
+    [passwordHash, userId]
+  );
+}

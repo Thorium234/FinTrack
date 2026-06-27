@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import ChartCard from "../components/ChartCard.jsx";
 import TransactionTable from "../components/TransactionTable.jsx";
 import { fetchDashboardSummary } from "../services/dashboardService.js";
@@ -13,6 +14,8 @@ function SummaryCard({ label, value, hint, tone = "neutral" }) {
     </article>
   );
 }
+
+const PIE_COLORS = ["#6cd4a8", "#f0b35d", "#f16b5e", "#8bcfff", "#a855f7", "#14b8a6", "#f43f5e", "#6366f1"];
 
 export default function Dashboard({ month, dataVersion, onNavigate }) {
   const [state, setState] = useState({
@@ -58,6 +61,21 @@ export default function Dashboard({ month, dataVersion, onNavigate }) {
   const totalBudget = budgets.reduce((sum, budget) => sum + Number(budget.amount || 0), 0);
   const totalSpent = budgets.reduce((sum, budget) => sum + Number(budget.spent || 0), 0);
   const budgetProgress = totalBudget ? toPercent(totalSpent, totalBudget) : 0;
+
+  const breakdownData = [...categoryBreakdown]
+    .sort((a, b) => Number(b.total) - Number(a.total))
+    .map((item) => ({
+      name: item.category_name,
+      value: Number(item.total || 0)
+    }));
+
+  const budgetPieData = budgets
+    .map((budget) => ({
+      name: budget.category_name,
+      spent: Number(budget.spent || 0),
+      remaining: Math.max(0, Number(budget.amount || 0) - Number(budget.spent || 0))
+    }))
+    .filter((b) => b.spent > 0 || b.remaining > 0);
 
   return (
     <div className="page-stack">
@@ -108,45 +126,33 @@ export default function Dashboard({ month, dataVersion, onNavigate }) {
 
       <div className="dashboard-grid">
         <ChartCard title="Spending by category" subtitle="Breakdown">
-          {categoryBreakdown.length ? (
-            <div className="bar-chart">
-              {categoryBreakdown.map((item) => {
-                const total = Number(item.total || 0);
-                const maxTotal = Math.max(...categoryBreakdown.map((entry) => Number(entry.total || 0)), 1);
-
-                return (
-                  <div key={`${item.category_id || item.category_name}`} className="bar-row">
-                    <div className="bar-row-head">
-                      <span>{item.category_name}</span>
-                      <strong>{formatCurrency(total)}</strong>
-                    </div>
-                    <div className="bar-track">
-                      <span style={{ width: `${(total / maxTotal) * 100}%` }} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+          {breakdownData.length ? (
+            <ResponsiveContainer width="100%" height={Math.max(200, breakdownData.length * 50)}>
+              <BarChart data={breakdownData} layout="vertical" margin={{ left: 0, right: 20, top: 0, bottom: 0 }}>
+                <XAxis type="number" tick={{ fill: "var(--muted)", fontSize: 12 }} axisLine={false} tickLine={false} />
+                <YAxis type="category" dataKey="name" tick={{ fill: "var(--text)", fontSize: 12 }} axisLine={false} tickLine={false} width={90} />
+                <Tooltip formatter={(value) => formatCurrency(Number(value))} contentStyle={{ background: "var(--panel)", border: "1px solid var(--border)", borderRadius: "12px", color: "var(--text)" }} />
+                <Bar dataKey="value" radius={[0, 6, 6, 0]} fill="var(--accent)" />
+              </BarChart>
+            </ResponsiveContainer>
           ) : (
             <div className="empty-state">No expense breakdown yet.</div>
           )}
         </ChartCard>
 
         <ChartCard title="Budget usage" subtitle="Pressure">
-          {budgets.length ? (
-            <div className="budget-mini-list">
-              {budgets.map((budget) => (
-                <div key={budget.id} className="budget-mini">
-                  <div>
-                    <strong>{budget.category_name}</strong>
-                    <span>
-                      {formatCurrency(budget.spent)} of {formatCurrency(budget.amount)}
-                    </span>
-                  </div>
-                  <small>{Math.round(toPercent(budget.spent, budget.amount))}%</small>
-                </div>
-              ))}
-            </div>
+          {budgetPieData.length ? (
+            <ResponsiveContainer width="100%" height={280}>
+              <PieChart>
+                <Pie data={budgetPieData} dataKey="spent" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={90} paddingAngle={3}>
+                  {budgetPieData.map((_entry, index) => (
+                    <Cell key={index} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value) => formatCurrency(Number(value))} contentStyle={{ background: "var(--panel)", border: "1px solid var(--border)", borderRadius: "12px", color: "var(--text)" }} />
+                <Legend wrapperStyle={{ fontSize: "12px", color: "var(--text)" }} />
+              </PieChart>
+            </ResponsiveContainer>
           ) : (
             <div className="empty-state">No budgets for this month.</div>
           )}

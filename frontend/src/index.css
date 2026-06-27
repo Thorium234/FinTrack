@@ -3,16 +3,24 @@
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   line-height: 1.5;
   font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  --radius-xl: 28px;
+  --radius-lg: 22px;
+  --radius-md: 16px;
+  --radius-sm: 12px;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
   color: #d7e3d5;
   background:
     radial-gradient(circle at top left, rgba(24, 118, 92, 0.35), transparent 30%),
     radial-gradient(circle at top right, rgba(198, 146, 67, 0.2), transparent 24%),
     linear-gradient(180deg, #0b1110 0%, #0f1715 52%, #101615 100%);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  color-scheme: dark;
 
   --bg: #0b1110;
   --panel: rgba(14, 24, 21, 0.86);
@@ -26,10 +34,54 @@
   --warning: #f0b35d;
   --danger: #f16b5e;
   --shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
-  --radius-xl: 28px;
-  --radius-lg: 22px;
-  --radius-md: 16px;
-  --radius-sm: 12px;
+  --input-bg: rgba(7, 13, 12, 0.82);
+  --label-color: #cfe0d9;
+  --card-bg: rgba(9, 15, 14, 0.72);
+  --sidebar-bg: rgba(9, 15, 14, 0.88);
+  --bar-track-bg: rgba(145, 168, 159, 0.12);
+  --section-bg: linear-gradient(180deg, rgba(16, 24, 22, 0.95), rgba(10, 15, 14, 0.9));
+  --positive: #8ee0b7;
+  --warning-text: #f2c46d;
+  --accent-blue: #8bcfff;
+  --pill-bg-income: rgba(108, 212, 168, 0.14);
+  --pill-bg-expense: rgba(241, 107, 94, 0.12);
+  --pill-income: #8ee0b7;
+  --pill-expense: #ff9c94;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  color: #1a2e28;
+  background:
+    radial-gradient(circle at top left, rgba(108, 212, 168, 0.15), transparent 30%),
+    radial-gradient(circle at top right, rgba(240, 179, 93, 0.08), transparent 24%),
+    linear-gradient(180deg, #f4f9f7 0%, #eaf3ef 52%, #e0ebe5 100%);
+
+  --bg: #ebf3ef;
+  --panel: rgba(250, 253, 252, 0.92);
+  --panel-strong: #ffffff;
+  --panel-soft: rgba(240, 248, 245, 0.85);
+  --border: rgba(40, 80, 66, 0.12);
+  --text: #1a2e28;
+  --muted: #5f7a6f;
+  --accent: #249f6e;
+  --accent-strong: #1a8059;
+  --warning: #c9892e;
+  --danger: #d94c3f;
+  --shadow: 0 18px 48px rgba(0, 0, 0, 0.08);
+  --input-bg: rgba(255, 255, 255, 0.85);
+  --label-color: #2a4238;
+  --card-bg: rgba(255, 255, 255, 0.82);
+  --sidebar-bg: rgba(255, 255, 255, 0.92);
+  --bar-track-bg: rgba(40, 80, 66, 0.08);
+  --section-bg: linear-gradient(180deg, rgba(248, 253, 251, 0.98), rgba(240, 248, 245, 0.95));
+  --positive: #1a9e6a;
+  --warning-text: #b87a22;
+  --accent-blue: #2a7fa8;
+  --pill-bg-income: rgba(26, 158, 106, 0.12);
+  --pill-bg-expense: rgba(217, 76, 63, 0.1);
+  --pill-income: #1a9e6a;
+  --pill-expense: #c94235;
 }
 
 * {

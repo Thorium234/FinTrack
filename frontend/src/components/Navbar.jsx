@@ -1,6 +1,9 @@
 import { formatMonthLabel } from "../utils/format.js";
+import { useTheme } from "../context/ThemeContext.jsx";
 
 export default function Navbar({ user, month, onMonthChange, onLogout }) {
+  const { theme, toggleTheme } = useTheme();
+
   return (
     <header className="topbar">
       <div>
@@ -12,6 +15,9 @@ export default function Navbar({ user, month, onMonthChange, onLogout }) {
       </div>
 
       <div className="topbar-actions">
+        <button type="button" className="theme-toggle" onClick={toggleTheme} title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}>
+          {theme === "dark" ? "\u2600" : "\u263D"}
+        </button>
         <label className="month-picker">
           <span>Month</span>
           <input

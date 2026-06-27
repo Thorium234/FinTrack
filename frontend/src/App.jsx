@@ -4,6 +4,8 @@ import ProtectedRoute from "./routes/ProtectedRoute.jsx";
 import useAuth from "./hooks/useAuth.js";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
+import ForgotPassword from "./pages/ForgotPassword.jsx";
+import ResetPassword from "./pages/ResetPassword.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Transactions from "./pages/Transactions.jsx";
 import Budgets from "./pages/Budgets.jsx";
@@ -17,6 +19,18 @@ function getRouteFromHash() {
   }
 
   return value.startsWith("/") ? value : `/${value}`;
+}
+
+function getBaseRoute(route) {
+  const parts = route.split("/");
+  return parts.length > 1 ? `/${parts[1]}` : route;
+}
+
+const PUBLIC_ROUTES = ["/login", "/register", "/forgot-password", "/reset-password"];
+
+function isPublicRoute(route) {
+  const base = getBaseRoute(route);
+  return PUBLIC_ROUTES.includes(base);
 }
 
 function AppContent() {
@@ -41,12 +55,12 @@ function AppContent() {
       return;
     }
 
-    if (!auth.isAuthenticated && route !== "/login" && route !== "/register") {
+    if (!auth.isAuthenticated && !isPublicRoute(route)) {
       window.location.hash = "#/login";
       return;
     }
 
-    if (auth.isAuthenticated && (route === "/login" || route === "/register")) {
+    if (auth.isAuthenticated && isPublicRoute(route)) {
       window.location.hash = "#/dashboard";
     }
   }, [auth.isAuthenticated, auth.ready, route]);
@@ -64,7 +78,10 @@ function AppContent() {
   }
 
   if (!auth.isAuthenticated) {
-    return route === "/register" ? <Register /> : <Login />;
+    if (route === "/register") return <Register />;
+    if (route === "/forgot-password") return <ForgotPassword />;
+    if (getBaseRoute(route) === "/reset-password") return <ResetPassword />;
+    return <Login />;
   }
 
   const pageMap = {

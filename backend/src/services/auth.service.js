@@ -1,11 +1,14 @@
 import bcrypt from "bcryptjs";
-import { findUserByEmail, createUser, findUserById } from "../models/User.js";
+import crypto from "crypto";
+import { findUserByEmail, createUser, findUserById, setResetToken, findUserByResetToken, updateUserPassword } from "../models/User.js";
 import { generateToken } from "../utils/jwt.js";
 import {
   createHttpError,
   normalizePassword,
   normalizeRequiredText
 } from "../utils/validation.js";
+
+const RESET_TOKEN_EXPIRY_MS = 60 * 60 * 1000;
 
 export async function registerUser({ name, email, password }) {
   const normalizedEmail = normalizeRequiredText(email, "Email").toLowerCase();
@@ -50,7 +53,6 @@ export async function loginUser(email, password) {
     throw error;
   }
 
-  // Generate the JWT payload token
   const token = generateToken({
     userId: user.id,
     email: user.email
@@ -62,6 +64,40 @@ export async function loginUser(email, password) {
       name: user.name,
       email: user.email
     },
-    token // <-- Add token here
+    token
   };
+}
+
+export async function forgotPassword(email) {
+  const normalizedEmail = normalizeRequiredText(email, "Email").toLowerCase();
+  const user = await findUserByEmail(normalizedEmail);
+
+  if (!user) {
+    return { message: "If that email is registered, a reset link has been sent." };
+  }
+
+  const resetToken = crypto.randomBytes(32).toString("hex");
+  const expiresAt = new Date(Date.now() + RESET_TOKEN_EXPIRY_MS).toISOString().slice(0, 19).replace("T", " ");
+
+  await setResetToken(user.id, resetToken, expiresAt);
+
+  const resetUrl = `${process.env.FRONTEND_URL || "http://localhost:5173"}/#/reset-password/${resetToken}`;
+  console.log("============================================");
+  console.log("PASSWORD RESET LINK (simulated email):");
+  console.log(resetUrl);
+  console.log("============================================");
+
+  return { message: "If that email is registered, a reset link has been sent." };
+}
+
+export async function resetPassword(token, newPassword) {
+  const user = await findUserByResetToken(token);
+  if (!user) {
+    throw createHttpError("Invalid or expired reset token", 400);
+  }
+
+  const passwordHash = await bcrypt.hash(normalizePassword(newPassword), 10);
+  await updateUserPassword(user.id, passwordHash);
+
+  return { message: "Password reset successfully" };
 }

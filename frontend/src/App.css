@@ -259,7 +259,7 @@
 label {
   display: grid;
   gap: 8px;
-  color: #cfe0d9;
+  color: var(--label-color);
 }
 
 label span {
@@ -270,8 +270,8 @@ input,
 select {
   width: 100%;
   border-radius: 14px;
-  border: 1px solid rgba(187, 208, 199, 0.13);
-  background: rgba(7, 13, 12, 0.82);
+  border: 1px solid var(--border);
+  background: var(--input-bg);
   color: var(--text);
   padding: 14px 16px;
   outline: none;
@@ -337,7 +337,7 @@ select:focus {
   height: 100vh;
   padding: 28px 20px;
   border-right: 1px solid var(--border);
-  background: rgba(9, 15, 14, 0.88);
+  background: var(--sidebar-bg);
   backdrop-filter: blur(16px);
 }
 
@@ -414,6 +414,19 @@ select:focus {
   flex-wrap: wrap;
 }
 
+.theme-toggle {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 1.3rem;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+}
+
 .month-picker {
   min-width: 180px;
 }
@@ -457,7 +470,7 @@ select:focus {
 .chart-card {
   border-radius: var(--radius-xl);
   border: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(16, 24, 22, 0.95), rgba(10, 15, 14, 0.9));
+  background: var(--section-bg);
   box-shadow: var(--shadow);
 }
 
@@ -508,15 +521,15 @@ select:focus {
 }
 
 .summary-card.positive strong {
-  color: #8ee0b7;
+  color: var(--positive);
 }
 
 .summary-card.warning strong {
-  color: #f2c46d;
+  color: var(--warning-text);
 }
 
 .summary-card.accent strong {
-  color: #8bcfff;
+  color: var(--accent-blue);
 }
 
 .dashboard-grid {
@@ -568,7 +581,7 @@ select:focus {
 .bar-track {
   height: 10px;
   border-radius: 999px;
-  background: rgba(145, 168, 159, 0.12);
+  background: var(--bar-track-bg);
   overflow: hidden;
 }
 
@@ -581,7 +594,7 @@ select:focus {
 
 .budget-mini {
   padding: 14px 0;
-  border-bottom: 1px solid rgba(187, 208, 199, 0.08);
+  border-bottom: 1px solid var(--border);
 }
 
 .budget-mini:last-child {
@@ -598,7 +611,7 @@ select:focus {
 
 .table-card {
   overflow-x: auto;
-  border: 1px solid rgba(187, 208, 199, 0.08);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
 }
 
@@ -611,7 +624,7 @@ select:focus {
 .data-table td {
   text-align: left;
   padding: 14px 16px;
-  border-bottom: 1px solid rgba(187, 208, 199, 0.08);
+  border-bottom: 1px solid var(--border);
 }
 
 .data-table th {
@@ -649,13 +662,13 @@ select:focus {
 }
 
 .pill-income {
-  background: rgba(108, 212, 168, 0.14);
-  color: #8ee0b7;
+  background: var(--pill-bg-income);
+  color: var(--pill-income);
 }
 
 .pill-expense {
-  background: rgba(241, 107, 94, 0.12);
-  color: #ff9c94;
+  background: var(--pill-bg-expense);
+  color: var(--pill-expense);
 }
 
 .budget-grid {
@@ -667,8 +680,8 @@ select:focus {
 .budget-card {
   padding: 18px;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(187, 208, 199, 0.1);
-  background: rgba(9, 15, 14, 0.72);
+  border: 1px solid var(--border);
+  background: var(--card-bg);
   display: grid;
   gap: 14px;
 }
@@ -728,8 +741,8 @@ select:focus {
 .report-metric {
   padding: 18px;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(187, 208, 199, 0.1);
-  background: rgba(9, 15, 14, 0.72);
+  border: 1px solid var(--border);
+  background: var(--card-bg);
 }
 
 .report-metric strong {

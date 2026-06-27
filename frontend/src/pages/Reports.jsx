@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, XAxis, YAxis } from "recharts";
 import ChartCard from "../components/ChartCard.jsx";
 import { fetchDashboardSummary } from "../services/dashboardService.js";
 import { formatCurrency, formatMonthLabel, toPercent } from "../utils/format.js";
+
+const PIE_COLORS = ["#6cd4a8", "#f0b35d", "#f16b5e", "#8bcfff", "#a855f7", "#14b8a6", "#f43f5e", "#6366f1", "#22c55e", "#eab308"];
 
 function downloadCsv(filename, rows) {
   const csv = rows
@@ -67,6 +70,19 @@ export default function Reports({ month, dataVersion }) {
     ["Category count", categoryBreakdown.length]
   ];
 
+  const breakdownData = categoryBreakdown.map((item) => ({
+    name: item.category_name,
+    value: Number(item.total || 0)
+  }));
+
+  const budgetData = budgets
+    .map((budget) => ({
+      name: budget.category_name,
+      spent: Number(budget.spent || 0),
+      amount: Number(budget.amount || 0)
+    }))
+    .filter((b) => b.amount > 0);
+
   return (
     <div className="page-stack">
       <section className="section-card">
@@ -113,59 +129,65 @@ export default function Reports({ month, dataVersion }) {
       </section>
 
       <div className="dashboard-grid">
-        <ChartCard title="Category pressure" subtitle="Spending">
-          {categoryBreakdown.length ? (
-            <div className="report-bars">
-              {categoryBreakdown.map((item) => (
-                <div key={`${item.category_id || item.category_name}`} className="bar-row">
-                  <div className="bar-row-head">
-                    <span>{item.category_name}</span>
-                    <strong>{formatCurrency(item.total)}</strong>
-                  </div>
-                  <div className="bar-track">
-                    <span
-                      style={{
-                        width: `${Math.max(
-                          8,
-                          Math.min(
-                            100,
-                            (Number(item.total || 0) /
-                              Math.max(
-                                ...categoryBreakdown.map((entry) => Number(entry.total || 0)),
-                                1
-                              )) *
-                              100
-                          )
-                        )}%`
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
+        <ChartCard title="Category breakdown" subtitle="Spending">
+          {breakdownData.length ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie data={breakdownData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} paddingAngle={2} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                  {breakdownData.map((_entry, index) => (
+                    <Cell key={index} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value) => formatCurrency(Number(value))} contentStyle={{ background: "var(--panel)", border: "1px solid var(--border)", borderRadius: "12px", color: "var(--text)" }} />
+                <Legend wrapperStyle={{ fontSize: "12px", color: "var(--text)" }} />
+              </PieChart>
+            </ResponsiveContainer>
           ) : (
             <div className="empty-state">No category breakdown available.</div>
           )}
         </ChartCard>
 
-        <ChartCard title="Recent activity" subtitle="Transactions">
-          <div className="report-list">
-            {recentTransactions.length ? (
-              recentTransactions.map((transaction) => (
-                <div key={transaction.id} className="report-list-item">
-                  <div>
-                    <strong>{transaction.category_name || "Uncategorized"}</strong>
-                    <span>{transaction.description || transaction.transaction_date}</span>
-                  </div>
-                  <strong>{formatCurrency(transaction.amount)}</strong>
-                </div>
-              ))
-            ) : (
-              <div className="empty-state">No recent activity.</div>
-            )}
-          </div>
+        <ChartCard title="Budget vs spending" subtitle="Per category">
+          {budgetData.length ? (
+            <ResponsiveContainer width="100%" height={Math.max(200, budgetData.length * 50)}>
+              <BarChart data={budgetData} layout="vertical" margin={{ left: 0, right: 20, top: 0, bottom: 0 }}>
+                <XAxis type="number" tick={{ fill: "var(--muted)", fontSize: 12 }} axisLine={false} tickLine={false} />
+                <YAxis type="category" dataKey="name" tick={{ fill: "var(--text)", fontSize: 12 }} axisLine={false} tickLine={false} width={90} />
+                <Tooltip formatter={(value) => formatCurrency(Number(value))} contentStyle={{ background: "var(--panel)", border: "1px solid var(--border)", borderRadius: "12px", color: "var(--text)" }} />
+                <Bar dataKey="spent" name="Spent" radius={[0, 6, 6, 0]} fill="#f16b5e" />
+                <Bar dataKey="amount" name="Budget" radius={[0, 6, 6, 0]} fill="#6cd4a8" />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="empty-state">No budget data available.</div>
+          )}
         </ChartCard>
       </div>
+
+      <section className="section-card">
+        <div className="section-head">
+          <div>
+            <p className="card-label">Recent activity</p>
+            <h3>Transactions</h3>
+          </div>
+          <p className="section-note">{recentTransactions.length} records</p>
+        </div>
+        <div className="report-list">
+          {recentTransactions.length ? (
+            recentTransactions.map((transaction) => (
+              <div key={transaction.id} className="report-list-item">
+                <div>
+                  <strong>{transaction.category_name || "Uncategorized"}</strong>
+                  <span>{transaction.description || transaction.transaction_date}</span>
+                </div>
+                <strong>{formatCurrency(transaction.amount)}</strong>
+              </div>
+            ))
+          ) : (
+            <div className="empty-state">No recent activity.</div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

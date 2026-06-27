@@ -52,6 +52,9 @@ export default function Login() {
           <button type="submit" className="button button-primary" disabled={loading}>
             {loading ? "Signing in..." : "Sign in"}
           </button>
+          <p className="forgot-link">
+            <a href="#/forgot-password">Forgot password?</a>
+          </p>
         </form>
 
         <p className="auth-switch">
