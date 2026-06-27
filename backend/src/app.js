@@ -9,6 +9,7 @@ import transactionRoutes from "./routes/transaction.routes.js";
 import budgetRoutes from "./routes/budget.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
 import { notFound, errorHandler } from "./middlewares/error.middleware.js";
+import { requestLogger } from "./middlewares/requestLog.middleware.js";
 
 const app = express();
 const uploadsDir = fileURLToPath(new URL("../uploads", import.meta.url));
@@ -18,6 +19,7 @@ app.use(cors());
 app.use(express.json()); // <-- This extracts JSON and creates req.body
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
+app.use(requestLogger);
 app.use("/uploads", express.static(path.resolve(uploadsDir)));
 
 // 2. ROUTES (Must run second)
