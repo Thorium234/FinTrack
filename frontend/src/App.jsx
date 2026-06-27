@@ -1,122 +1,119 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useEffect, useState } from "react";
+import DashboardLayout from "./layouts/DashboardLayout.jsx";
+import ProtectedRoute from "./routes/ProtectedRoute.jsx";
+import useAuth from "./hooks/useAuth.js";
+import Login from "./pages/Login.jsx";
+import Register from "./pages/Register.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
+import Transactions from "./pages/Transactions.jsx";
+import Budgets from "./pages/Budgets.jsx";
+import Reports from "./pages/Reports.jsx";
+import "./App.css";
 
-function App() {
-  const [count, setCount] = useState(0)
+function getRouteFromHash() {
+  const value = window.location.hash.replace(/^#/, "");
+  if (!value || value === "/") {
+    return "/dashboard";
+  }
 
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+  return value.startsWith("/") ? value : `/${value}`;
 }
 
-export default App
+function AppContent() {
+  const auth = useAuth();
+  const [route, setRoute] = useState(getRouteFromHash());
+  const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [dataVersion, setDataVersion] = useState(0);
+
+  useEffect(() => {
+    const syncRoute = () => setRoute(getRouteFromHash());
+    window.addEventListener("hashchange", syncRoute);
+
+    if (!window.location.hash) {
+      window.location.hash = auth.isAuthenticated ? "#/dashboard" : "#/login";
+    }
+
+    return () => window.removeEventListener("hashchange", syncRoute);
+  }, [auth.isAuthenticated]);
+
+  useEffect(() => {
+    if (!auth.ready) {
+      return;
+    }
+
+    if (!auth.isAuthenticated && route !== "/login" && route !== "/register") {
+      window.location.hash = "#/login";
+      return;
+    }
+
+    if (auth.isAuthenticated && (route === "/login" || route === "/register")) {
+      window.location.hash = "#/dashboard";
+    }
+  }, [auth.isAuthenticated, auth.ready, route]);
+
+  function navigate(nextRoute) {
+    window.location.hash = `#${nextRoute}`;
+  }
+
+  function refreshData() {
+    setDataVersion((current) => current + 1);
+  }
+
+  if (!auth.ready) {
+    return <div className="loading-screen">Initializing FinTrack...</div>;
+  }
+
+  if (!auth.isAuthenticated) {
+    return route === "/register" ? <Register /> : <Login />;
+  }
+
+  const pageMap = {
+    "/dashboard": (
+      <Dashboard
+        key={`dashboard-${month}`}
+        month={month}
+        dataVersion={dataVersion}
+        onNavigate={navigate}
+      />
+    ),
+    "/transactions": (
+      <Transactions
+        key={`transactions-${month}`}
+        month={month}
+        dataVersion={dataVersion}
+        onRefresh={refreshData}
+      />
+    ),
+    "/budgets": (
+      <Budgets
+        key={`budgets-${month}`}
+        month={month}
+        dataVersion={dataVersion}
+        onRefresh={refreshData}
+      />
+    ),
+    "/reports": <Reports key={`reports-${month}`} month={month} dataVersion={dataVersion} />
+  };
+
+  const page = pageMap[route] || pageMap["/dashboard"];
+
+  return (
+    <DashboardLayout
+      activeRoute={route in pageMap ? route : "/dashboard"}
+      month={month}
+      onMonthChange={(nextMonth) => {
+        setMonth(nextMonth || month);
+        refreshData();
+      }}
+      onNavigate={navigate}
+      onLogout={auth.logout}
+      user={auth.user}
+    >
+      <ProtectedRoute isAuthenticated={auth.isAuthenticated}>{page}</ProtectedRoute>
+    </DashboardLayout>
+  );
+}
+
+export default function App() {
+  return <AppContent />;
+}
