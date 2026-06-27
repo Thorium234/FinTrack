@@ -69,7 +69,7 @@ export async function getTransactions(userId, filters = {}) {
   return listTransactions(userId, {
     type: filters.type,
     categoryId: filters.categoryId,
-    month: filters.month ? toMonth(filters.month) : undefined,
+    month: filters.month ? parseMonth(filters.month) : undefined,
     fromDate: filters.fromDate,
     toDate: filters.toDate,
     limit: filters.limit,
@@ -145,7 +145,7 @@ export async function removeTransaction(userId, transactionId) {
 }
 
 export async function getTransactionDashboard(userId, month) {
-  const resolvedMonth = toMonth(month);
+  const resolvedMonth = parseMonth(month);
 
   const [summary, recentTransactions, categoryBreakdown] = await Promise.all([
     getTransactionSummary(userId, resolvedMonth),
