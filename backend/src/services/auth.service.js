@@ -28,7 +28,8 @@ export async function registerUser({ name, email, password }) {
   const user = await findUserById(userId);
   const token = generateToken({
     userId: user.id,
-    email: user.email
+    email: user.email,
+    isAdmin: user.is_admin
   });
 
   return {
@@ -55,14 +56,16 @@ export async function loginUser(email, password) {
 
   const token = generateToken({
     userId: user.id,
-    email: user.email
+    email: user.email,
+    isAdmin: user.is_admin
   });
 
   return {
     user: {
       id: user.id,
       name: user.name,
-      email: user.email
+      email: user.email,
+      isAdmin: user.is_admin
     },
     token
   };

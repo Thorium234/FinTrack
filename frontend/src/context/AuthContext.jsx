@@ -8,34 +8,19 @@ import {
 import { AuthContext } from "./AuthContextObject.js";
 import { authReducer, AUTH_ACTIONS, initialAuthState } from "./AuthReducer.js";
 
-function mergeProfileUser(storedUser, profileUser, token) {
-  return {
-    ...(storedUser || {}),
-    ...(profileUser || {}),
-    token
-  };
-}
-
 export function AuthProvider({ children }) {
   const [state, dispatch] = useReducer(authReducer, initialAuthState);
 
   useEffect(() => {
     const { token, user } = readStoredAuthSession();
 
-    if (!token) {
-      dispatch({ type: AUTH_ACTIONS.BOOTSTRAP_FAILURE });
-      return;
-    }
-
-    dispatch({ type: AUTH_ACTIONS.BOOTSTRAP_START });
-
-    apiRequest("/auth/profile", { token })
+    apiRequest("/auth/profile")
       .then((data) => {
-        const mergedUser = mergeProfileUser(user, data.user, token);
-        setStoredAuthSession({ token, user: mergedUser });
+        const mergedUser = { ...(user || {}), ...(data.user || {}) };
+        setStoredAuthSession({ user: mergedUser });
         dispatch({
           type: AUTH_ACTIONS.BOOTSTRAP_SUCCESS,
-          payload: { token, user: mergedUser }
+          payload: { user: mergedUser }
         });
       })
       .catch(() => {
@@ -50,15 +35,10 @@ export function AuthProvider({ children }) {
       body: credentials
     });
 
-    const user = {
-      ...data.user,
-      token: data.token
-    };
-
-    setStoredAuthSession({ token: data.token, user });
+    setStoredAuthSession({ user: data.user });
     dispatch({
       type: AUTH_ACTIONS.SESSION_SET,
-      payload: { token: data.token, user }
+      payload: { user: data.user }
     });
 
     return data;
@@ -70,38 +50,17 @@ export function AuthProvider({ children }) {
       body: credentials
     });
 
-    const user = {
-      ...data.user,
-      token: data.token
-    };
-
-    setStoredAuthSession({ token: data.token, user });
+    setStoredAuthSession({ user: data.user });
     dispatch({
       type: AUTH_ACTIONS.SESSION_SET,
-      payload: { token: data.token, user }
+      payload: { user: data.user }
     });
 
     return data;
   }
 
-  async function refreshProfile() {
-    if (!state.token) {
-      return null;
-    }
-
-    const data = await apiRequest("/auth/profile", { token: state.token });
-    const mergedUser = mergeProfileUser(state.user, data.user, state.token);
-
-    setStoredAuthSession({ token: state.token, user: mergedUser });
-    dispatch({
-      type: AUTH_ACTIONS.SESSION_UPDATE,
-      payload: { user: mergedUser }
-    });
-
-    return mergedUser;
-  }
-
   function logout() {
+    apiRequest("/auth/logout", { method: "POST" }).catch(() => {});
     clearStoredAuthSession();
     dispatch({ type: AUTH_ACTIONS.SESSION_CLEAR });
     if (window.location.hash !== "#/login") {
@@ -111,10 +70,9 @@ export function AuthProvider({ children }) {
 
   const value = {
     ...state,
-    isAuthenticated: Boolean(state.token),
+    isAuthenticated: Boolean(state.user),
     login,
     register,
-    refreshProfile,
     logout
   };
 

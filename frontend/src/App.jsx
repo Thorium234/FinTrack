@@ -10,6 +10,9 @@ import Dashboard from "./pages/Dashboard.jsx";
 import Transactions from "./pages/Transactions.jsx";
 import Budgets from "./pages/Budgets.jsx";
 import Reports from "./pages/Reports.jsx";
+import Goals from "./pages/Goals.jsx";
+import RecurringTransactions from "./pages/RecurringTransactions.jsx";
+import Admin from "./pages/Admin.jsx";
 import CsvImport from "./pages/CsvImport.jsx";
 import "./App.css";
 
@@ -111,8 +114,14 @@ function AppContent() {
       />
     ),
     "/reports": <Reports key={`reports-${month}`} month={month} dataVersion={dataVersion} />,
-    "/import": <CsvImport />
+    "/import": <CsvImport />,
+    "/recurring": <RecurringTransactions key={`recurring-${dataVersion}`} dataVersion={dataVersion} onRefresh={refreshData} />,
+    "/goals": <Goals key={`goals-${dataVersion}`} dataVersion={dataVersion} onRefresh={refreshData} />
   };
+
+  if (auth.user?.isAdmin) {
+    pageMap["/admin"] = <Admin />;
+  }
 
   const page = pageMap[route] || pageMap["/dashboard"];
 

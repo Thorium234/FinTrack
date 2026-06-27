@@ -31,7 +31,7 @@ export async function findUserByEmail(email) {
 export async function findUserById(id) {
   const [rows] = await pool.execute(
     `
-    SELECT id, name, email, created_at, updated_at
+    SELECT id, name, email, is_admin, created_at, updated_at
     FROM users
     WHERE id = ?
     `,
@@ -65,6 +65,18 @@ export async function findUserByResetToken(token) {
   );
 
   return rows[0];
+}
+
+export async function listAllUsers() {
+  const [rows] = await pool.execute(
+    `
+    SELECT id, name, email, is_admin, created_at
+    FROM users
+    ORDER BY created_at DESC
+    `
+  );
+
+  return rows;
 }
 
 export async function updateUserPassword(userId, passwordHash) {

@@ -1,14 +1,6 @@
 import Navbar from "../components/Navbar.jsx";
 import Sidebar from "../components/Sidebar.jsx";
 
-const NAV_ITEMS = [
-  { label: "Dashboard", route: "/dashboard" },
-  { label: "Transactions", route: "/transactions" },
-  { label: "Budgets", route: "/budgets" },
-  { label: "Reports", route: "/reports" },
-  { label: "Import", route: "/import" }
-];
-
 export default function DashboardLayout({
   activeRoute,
   children,
@@ -18,9 +10,23 @@ export default function DashboardLayout({
   onLogout,
   user
 }) {
+  const navItems = [
+    { label: "Dashboard", route: "/dashboard" },
+    { label: "Transactions", route: "/transactions" },
+    { label: "Recurring", route: "/recurring" },
+    { label: "Budgets", route: "/budgets" },
+    { label: "Goals", route: "/goals" },
+    { label: "Reports", route: "/reports" },
+    { label: "Import", route: "/import" }
+  ];
+
+  if (user?.isAdmin) {
+    navItems.push({ label: "Admin", route: "/admin" });
+  }
+
   return (
     <div className="app-shell">
-      <Sidebar activeRoute={activeRoute} items={NAV_ITEMS} onNavigate={onNavigate} />
+      <Sidebar activeRoute={activeRoute} items={navItems} onNavigate={onNavigate} />
       <div className="app-main">
         <Navbar
           user={user}

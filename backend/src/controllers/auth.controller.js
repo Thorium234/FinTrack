@@ -1,6 +1,14 @@
 import { registerUser, loginUser, forgotPassword, resetPassword } from "../services/auth.service.js";
 import { sendError, sendSuccess } from "../utils/response.js";
 
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax",
+  path: "/api",
+  maxAge: 24 * 60 * 60 * 1000
+};
+
 export async function register(req, res) {
   try {
     const { name, email, password } = req.body;
@@ -10,8 +18,9 @@ export async function register(req, res) {
     }
 
     const result = await registerUser({ name, email, password });
+    res.cookie("token", result.token, COOKIE_OPTIONS);
 
-    return sendSuccess(res, 201, "User created successfully", result);
+    return sendSuccess(res, 201, "User created successfully", { user: result.user });
 
   } catch (error) {
     const statusCode = error.statusCode || 500;
@@ -27,9 +36,10 @@ export async function login(req, res) {
       return sendError(res, 400, "Email and password are required");
     }
 
-    const user = await loginUser(email, password);
+    const result = await loginUser(email, password);
+    res.cookie("token", result.token, COOKIE_OPTIONS);
 
-    return sendSuccess(res, 200, "Login successful", user);
+    return sendSuccess(res, 200, "Login successful", { user: result.user });
 
   } catch (error) {
     const statusCode = error.statusCode || 500;
@@ -46,6 +56,11 @@ export async function profile(req, res) {
     console.error(error);
     return sendError(res, 500, "Internal server error");
   }
+}
+
+export async function logoutHandler(req, res) {
+  res.clearCookie("token", { path: "/api" });
+  return sendSuccess(res, 200, "Logged out successfully");
 }
 
 export async function forgotPasswordHandler(req, res) {

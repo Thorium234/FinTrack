@@ -29,6 +29,7 @@ startServer();*/
 import 'dotenv/config';
 import app from './app.js';
 import pool from './config/db.js';
+import { startRecurringJob } from "./jobs/recurring.job.js";
 
 const PORT = process.env.PORT || 5000;
 
@@ -37,6 +38,8 @@ async function startServer() {
     const connection = await pool.getConnection();
     console.log("Database Connected Successfully!");
     connection.release();
+
+    startRecurringJob();
 
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);

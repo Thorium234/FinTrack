@@ -3,6 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pi
 import ChartCard from "../components/ChartCard.jsx";
 import TransactionTable from "../components/TransactionTable.jsx";
 import { fetchDashboardSummary } from "../services/dashboardService.js";
+import { fetchGoals } from "../services/goalService.js";
 import { formatCurrency, formatMonthLabel, toPercent } from "../utils/format.js";
 
 function SummaryCard({ label, value, hint, tone = "neutral" }) {
@@ -26,17 +27,16 @@ export default function Dashboard({ month, dataVersion, onNavigate }) {
 
   useEffect(() => {
     let active = true;
-    fetchDashboardSummary(month)
-      .then((data) => {
-        if (!active) {
-          return;
-        }
-        setState({ loading: false, error: "", data });
+    Promise.all([
+      fetchDashboardSummary(month),
+      fetchGoals()
+    ])
+      .then(([dashboardData, goalList]) => {
+        if (!active) return;
+        setState({ loading: false, error: "", data: { ...dashboardData, goals: goalList } });
       })
       .catch((error) => {
-        if (!active) {
-          return;
-        }
+        if (!active) return;
         setState({
           loading: false,
           error: error.message || "Unable to load dashboard",
@@ -57,7 +57,7 @@ export default function Dashboard({ month, dataVersion, onNavigate }) {
     return <div className="error-panel">{state.error}</div>;
   }
 
-  const { summary, recentTransactions, categoryBreakdown, budgets } = state.data;
+  const { summary, recentTransactions, categoryBreakdown, budgets, goals = [] } = state.data;
   const totalBudget = budgets.reduce((sum, budget) => sum + Number(budget.amount || 0), 0);
   const totalSpent = budgets.reduce((sum, budget) => sum + Number(budget.spent || 0), 0);
   const budgetProgress = totalBudget ? toPercent(totalSpent, totalBudget) : 0;
@@ -158,6 +158,41 @@ export default function Dashboard({ month, dataVersion, onNavigate }) {
           )}
         </ChartCard>
       </div>
+
+      {goals.length > 0 ? (
+        <section className="section-card">
+          <div className="section-head">
+            <div>
+              <p className="card-label">Savings goals</p>
+              <h3>Progress</h3>
+            </div>
+            <button type="button" className="button button-secondary" onClick={() => onNavigate("/goals")}>
+              Manage goals
+            </button>
+          </div>
+          <div className="goal-list">
+            {goals.slice(0, 4).map((goal) => {
+              const target = Number(goal.target_amount) || 1;
+              const current = Number(goal.current_amount) || 0;
+              const pct = Math.min(100, Math.round((current / target) * 100));
+              return (
+                <div key={goal.id} className="goal-card" style={{ padding: "12px 16px" }}>
+                  <div className="goal-header" style={{ marginBottom: 6 }}>
+                    <strong>{goal.name}</strong>
+                    <span style={{ fontSize: "0.9rem" }}>{formatCurrency(current)} / {formatCurrency(target)}</span>
+                  </div>
+                  <div className="goal-bar-track" style={{ marginBottom: 0 }}>
+                    <div className="goal-bar-fill" style={{ width: `${pct}%` }} />
+                  </div>
+                  <div className="goal-footer" style={{ marginTop: 6 }}>
+                    <span>{pct}% saved</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
 
       <section className="section-card">
         <div className="section-head">

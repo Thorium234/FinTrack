@@ -7,7 +7,8 @@ export const AUTH_TOKEN_KEY = "fintrack_auth_token";
 export const AUTH_USER_KEY = "fintrack_auth_user";
 
 const client = axios.create({
-  baseURL: DEFAULT_API_BASE_URL
+  baseURL: DEFAULT_API_BASE_URL,
+  withCredentials: true
 });
 
 client.interceptors.request.use((config) => {
