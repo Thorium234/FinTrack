@@ -8,6 +8,7 @@ import categoryRoutes from "./routes/category.routes.js";
 import transactionRoutes from "./routes/transaction.routes.js";
 import budgetRoutes from "./routes/budget.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
+import reportRoutes from "./routes/report.routes.js";
 import { notFound, errorHandler } from "./middlewares/error.middleware.js";
 import { requestLogger } from "./middlewares/requestLog.middleware.js";
 
@@ -28,6 +29,7 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/budgets", budgetRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/reports", reportRoutes);
 
 // Base health check route
 app.get("/", (req, res) => {

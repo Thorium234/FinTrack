@@ -5,7 +5,8 @@ const NAV_ITEMS = [
   { label: "Dashboard", route: "/dashboard" },
   { label: "Transactions", route: "/transactions" },
   { label: "Budgets", route: "/budgets" },
-  { label: "Reports", route: "/reports" }
+  { label: "Reports", route: "/reports" },
+  { label: "Import", route: "/import" }
 ];
 
 export default function DashboardLayout({

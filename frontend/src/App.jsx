@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard.jsx";
 import Transactions from "./pages/Transactions.jsx";
 import Budgets from "./pages/Budgets.jsx";
 import Reports from "./pages/Reports.jsx";
+import CsvImport from "./pages/CsvImport.jsx";
 import "./App.css";
 
 function getRouteFromHash() {
@@ -109,7 +110,8 @@ function AppContent() {
         onRefresh={refreshData}
       />
     ),
-    "/reports": <Reports key={`reports-${month}`} month={month} dataVersion={dataVersion} />
+    "/reports": <Reports key={`reports-${month}`} month={month} dataVersion={dataVersion} />,
+    "/import": <CsvImport />
   };
 
   const page = pageMap[route] || pageMap["/dashboard"];

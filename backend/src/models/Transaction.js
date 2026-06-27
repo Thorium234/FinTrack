@@ -215,3 +215,67 @@ export async function getCategoryBreakdown(userId, month) {
 
   return rows;
 }
+
+export async function getYearlySummary(userId, year) {
+  const [rows] = await pool.execute(
+    `
+    SELECT
+      DATE_FORMAT(transaction_date, '%Y-%m') AS month,
+      COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END), 0) AS total_income,
+      COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) AS total_expense,
+      COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE -amount END), 0) AS balance
+    FROM transactions
+    WHERE user_id = ?
+      AND YEAR(transaction_date) = ?
+    GROUP BY DATE_FORMAT(transaction_date, '%Y-%m')
+    ORDER BY month ASC
+    `,
+    [userId, year]
+  );
+
+  return rows;
+}
+
+export async function getYearlyCategoryBreakdown(userId, year) {
+  const [rows] = await pool.execute(
+    `
+    SELECT
+      t.category_id,
+      COALESCE(c.name, 'Uncategorized') AS category_name,
+      COALESCE(c.color, '#64748b') AS category_color,
+      COALESCE(c.icon, 'tag') AS category_icon,
+      SUM(t.amount) AS total
+    FROM transactions t
+    LEFT JOIN categories c ON c.id = t.category_id
+    WHERE t.user_id = ?
+      AND t.type = 'expense'
+      AND YEAR(t.transaction_date) = ?
+    GROUP BY t.category_id, c.name, c.color, c.icon
+    ORDER BY total DESC
+    `,
+    [userId, year]
+  );
+
+  return rows;
+}
+
+export async function getYearComparison(userId, years) {
+  const placeholders = years.map(() => "?").join(", ");
+  const [rows] = await pool.execute(
+    `
+    SELECT
+      YEAR(transaction_date) AS year,
+      COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END), 0) AS total_income,
+      COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) AS total_expense,
+      COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE -amount END), 0) AS balance
+    FROM transactions
+    WHERE user_id = ?
+      AND YEAR(transaction_date) IN (${placeholders})
+    GROUP BY YEAR(transaction_date)
+    ORDER BY year ASC
+    `,
+    [userId, ...years]
+  );
+
+  return rows;
+}

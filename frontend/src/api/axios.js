@@ -1,29 +1,44 @@
+import axios from "axios";
+
 const DEFAULT_API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
 export const AUTH_TOKEN_KEY = "fintrack_auth_token";
 export const AUTH_USER_KEY = "fintrack_auth_user";
 
-function buildQueryString(params = {}) {
-  const entries = Object.entries(params).filter(([, value]) => {
-    return value !== undefined && value !== null && value !== "";
-  });
+const client = axios.create({
+  baseURL: DEFAULT_API_BASE_URL
+});
 
-  if (entries.length === 0) {
-    return "";
+client.interceptors.request.use((config) => {
+  const token = window.localStorage.getItem(AUTH_TOKEN_KEY);
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
+  return config;
+});
 
-  const searchParams = new URLSearchParams();
-  for (const [key, value] of entries) {
-    searchParams.set(key, String(value));
+client.interceptors.response.use(
+  (response) => response.data,
+  (error) => {
+    const message = error.response?.data?.message || error.message || "Request failed";
+    const err = new Error(message);
+    err.statusCode = error.response?.status;
+    err.payload = error.response?.data;
+    return Promise.reject(err);
   }
-
-  return `?${searchParams.toString()}`;
-}
+);
 
 export function buildApiUrl(path, params) {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  return `${DEFAULT_API_BASE_URL}${normalizedPath}${buildQueryString(params)}`;
+  let url = `${DEFAULT_API_BASE_URL}${normalizedPath}`;
+  if (params) {
+    const entries = Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== "");
+    if (entries.length) {
+      url += `?${new URLSearchParams(entries.map(([k, v]) => [k, String(v)])).toString()}`;
+    }
+  }
+  return url;
 }
 
 export async function apiRequest(path, options = {}) {
@@ -31,60 +46,34 @@ export async function apiRequest(path, options = {}) {
     method = "GET",
     body,
     params,
-    token,
     headers = {},
     responseType = "json"
   } = options;
 
-  const requestHeaders = { ...headers };
-  const authToken = token || window.localStorage.getItem(AUTH_TOKEN_KEY);
-
-  if (authToken) {
-    requestHeaders.Authorization = `Bearer ${authToken}`;
-  }
-
   const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
-  let requestBody = body;
 
-  if (body !== undefined && body !== null && !isFormData) {
-    requestHeaders["Content-Type"] = "application/json";
-    requestBody = JSON.stringify(body);
-  }
+  const config = {
+    method: method.toLowerCase(),
+    url: path,
+    params,
+    headers,
+    responseType
+  };
 
-  const response = await fetch(buildApiUrl(path, params), {
-    method,
-    headers: requestHeaders,
-    body: requestBody
-  });
-
-  if (responseType === "blob") {
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      const error = new Error(errorData?.message || "Request failed");
-      error.statusCode = response.status;
-      throw error;
+  if (body !== undefined && body !== null) {
+    config.data = body;
+    if (!isFormData) {
+      headers["Content-Type"] = "application/json";
     }
-
-    return response.blob();
   }
 
-  const data = await response.json().catch(() => null);
-
-  if (!response.ok) {
-    const error = new Error(data?.message || `Request failed with status ${response.status}`);
-    error.statusCode = response.status;
-    error.payload = data;
-    throw error;
-  }
-
-  return data;
+  return client.request(config);
 }
 
 export function setStoredAuthSession({ token, user }) {
   if (token) {
     window.localStorage.setItem(AUTH_TOKEN_KEY, token);
   }
-
   if (user) {
     window.localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
   }
@@ -99,7 +88,6 @@ export function readStoredAuthSession() {
   const token = window.localStorage.getItem(AUTH_TOKEN_KEY);
   const rawUser = window.localStorage.getItem(AUTH_USER_KEY);
   let user = null;
-
   if (rawUser) {
     try {
       user = JSON.parse(rawUser);
@@ -107,6 +95,5 @@ export function readStoredAuthSession() {
       user = null;
     }
   }
-
   return { token, user };
 }
