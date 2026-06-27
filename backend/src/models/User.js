@@ -27,3 +27,16 @@ export async function findUserByEmail(email) {
 
   return rows[0];
 }
+
+export async function findUserById(id) {
+  const [rows] = await pool.execute(
+    `
+    SELECT id, name, email, created_at, updated_at
+    FROM users
+    WHERE id = ?
+    `,
+    [id]
+  );
+
+  return rows[0];
+}

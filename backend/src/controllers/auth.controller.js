@@ -1,45 +1,23 @@
-import bcrypt from "bcryptjs";
-import { createUser, findUserByEmail } from "../models/User.js";
-
+import { registerUser, loginUser } from "../services/auth.service.js";
+import { sendError, sendSuccess } from "../utils/response.js";
 // 1. REGISTER CONTROLLER
 export async function register(req, res) {
   try {
     const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: "All fields are required"
-      });
+      return sendError(res, 400, "All fields are required");
     }
 
-    const existingUser = await findUserByEmail(email);
-    if (existingUser) {
-      return res.status(409).json({
-        success: false,
-        message: "Email already exists"
-      });
-    }
+    // Call the service to do the heavy lifting
+    const result = await registerUser({ name, email, password });
 
-    const passwordHash = await bcrypt.hash(password, 10);
-    const userId = await createUser({
-      name,
-      email,
-      passwordHash
-    });
-
-    return res.status(201).json({
-      success: true,
-      message: "User created successfully",
-      userId
-    });
+    return sendSuccess(res, 201, "User created successfully", result);
 
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
+    // If the service threw a controlled error, use its status code
+    const statusCode = error.statusCode || 500;
+    return sendError(res, statusCode, error.message || "Internal server error");
   }
 }
 
@@ -49,39 +27,40 @@ export async function login(req, res) {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: "Email and password are required"
-      });
+      return sendError(res, 400, "Email and password are required");
     }
 
-    const user = await findUserByEmail(email);
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid credentials"
-      });
-    }
+    // Call the service to authenticate credentials
+    const user = await loginUser(email, password);
 
-    const passwordMatches = await bcrypt.compare(password, user.password_hash);
-    if (!passwordMatches) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid credentials"
-      });
-    }
+    return sendSuccess(res, 200, "Login successful", user);
 
-    return res.status(200).json({
-      success: true,
-      message: "Login successful"
-    });
 
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
+    const statusCode = error.statusCode || 500;
+    return sendError(res, statusCode, error.message || "Internal server error");
   }
 }
 
+/*export async function profile(
+  req,
+  res
+) {
+  res.status(200).json({
+    success: true,
+    user: req.user
+  });
+}
+*/
+// 3. PROFILE CONTROLLER (Protected)
+export async function profile(req, res) {
+  try {
+    // req.user was populated by your authenticate middleware!
+    return sendSuccess(res, 200, "Profile retrieved successfully", {
+      user: req.user
+    });
+  } catch (error) {
+    console.error(error);
+    return sendError(res, 500, "Internal server error");
+  }
+}
