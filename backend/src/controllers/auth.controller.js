@@ -1,4 +1,5 @@
 import { registerUser, loginUser, forgotPassword, resetPassword } from "../services/auth.service.js";
+import { findUserById } from "../models/User.js";
 import { sendError, sendSuccess } from "../utils/response.js";
 
 const COOKIE_OPTIONS = {
@@ -49,9 +50,11 @@ export async function login(req, res) {
 
 export async function profile(req, res) {
   try {
-    return sendSuccess(res, 200, "Profile retrieved successfully", {
-      user: req.user
-    });
+    const user = await findUserById(req.user.userId);
+    if (!user) {
+      return sendError(res, 404, "User not found");
+    }
+    return sendSuccess(res, 200, "Profile retrieved successfully", { user });
   } catch (error) {
     console.error(error);
     return sendError(res, 500, "Internal server error");

@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS recurring_transactions (
-  id BIGINT(20) AUTO_INCREMENT PRIMARY KEY,
-  user_id BIGINT(20) NOT NULL,
-  category_id BIGINT(20) DEFAULT NULL,
+  id BIGINT(20) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id BIGINT(20) UNSIGNED NOT NULL,
+  category_id BIGINT(20) UNSIGNED DEFAULT NULL,
   amount DECIMAL(12,2) NOT NULL DEFAULT 0,
   type ENUM('income','expense') NOT NULL,
   description TEXT DEFAULT NULL,
@@ -12,6 +12,9 @@ CREATE TABLE IF NOT EXISTS recurring_transactions (
   active TINYINT(1) DEFAULT 1,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id),
-  FOREIGN KEY (category_id) REFERENCES categories(id)
+  KEY idx_recurring_user_id (user_id),
+  KEY idx_recurring_category_id (category_id),
+  KEY idx_recurring_active_next (active, next_date),
+  CONSTRAINT fk_recurring_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_recurring_category FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
 );

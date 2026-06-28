@@ -14,6 +14,8 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const { token, user } = readStoredAuthSession();
 
+    dispatch({ type: AUTH_ACTIONS.BOOTSTRAP_START });
+
     apiRequest("/auth/profile")
       .then((data) => {
         const mergedUser = { ...(user || {}), ...(data.user || {}) };

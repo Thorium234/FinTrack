@@ -77,9 +77,9 @@ export default function RecurringTransactions({ dataVersion, onRefresh }) {
         description: form.description || undefined,
         categoryId: form.categoryId || undefined,
         frequency: form.frequency,
-        intervalValue: form.intervalValue,
-        nextDate: form.nextDate,
-        endDate: form.endDate || undefined
+        interval_value: form.intervalValue,
+        next_date: form.nextDate,
+        end_date: form.endDate || undefined
       };
 
       if (editingId) {

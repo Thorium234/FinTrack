@@ -6,6 +6,9 @@ CREATE TABLE IF NOT EXISTS users (
   name VARCHAR(120) NOT NULL,
   email VARCHAR(191) NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
+  is_admin TINYINT(1) NOT NULL DEFAULT 0,
+  reset_token VARCHAR(255) NULL,
+  reset_token_expires DATETIME NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
@@ -23,6 +26,7 @@ CREATE TABLE IF NOT EXISTS categories (
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   KEY idx_categories_user_id (user_id),
+  UNIQUE KEY uniq_categories_name_user (name, user_id),
   CONSTRAINT fk_categories_user
     FOREIGN KEY (user_id) REFERENCES users(id)
     ON DELETE CASCADE
@@ -70,4 +74,51 @@ CREATE TABLE IF NOT EXISTS budgets (
   CONSTRAINT fk_budgets_category
     FOREIGN KEY (category_id) REFERENCES categories(id)
     ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS goals (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  user_id BIGINT UNSIGNED NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  target_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+  current_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+  deadline DATE DEFAULT NULL,
+  category_id BIGINT UNSIGNED DEFAULT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_goals_user_id (user_id),
+  KEY idx_goals_category_id (category_id),
+  CONSTRAINT fk_goals_user
+    FOREIGN KEY (user_id) REFERENCES users(id)
+    ON DELETE CASCADE,
+  CONSTRAINT fk_goals_category
+    FOREIGN KEY (category_id) REFERENCES categories(id)
+    ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS recurring_transactions (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  user_id BIGINT UNSIGNED NOT NULL,
+  category_id BIGINT UNSIGNED DEFAULT NULL,
+  amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+  type ENUM('income', 'expense') NOT NULL,
+  description TEXT DEFAULT NULL,
+  frequency ENUM('daily', 'weekly', 'monthly', 'yearly') NOT NULL DEFAULT 'monthly',
+  interval_value INT UNSIGNED NOT NULL DEFAULT 1,
+  next_date DATE NOT NULL,
+  end_date DATE DEFAULT NULL,
+  active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_recurring_user_id (user_id),
+  KEY idx_recurring_category_id (category_id),
+  KEY idx_recurring_active_next (active, next_date),
+  CONSTRAINT fk_recurring_user
+    FOREIGN KEY (user_id) REFERENCES users(id)
+    ON DELETE CASCADE,
+  CONSTRAINT fk_recurring_category
+    FOREIGN KEY (category_id) REFERENCES categories(id)
+    ON DELETE SET NULL
 ) ENGINE=InnoDB;

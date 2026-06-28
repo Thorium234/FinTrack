@@ -65,7 +65,7 @@ export async function loginUser(email, password) {
       id: user.id,
       name: user.name,
       email: user.email,
-      isAdmin: user.is_admin
+      is_admin: user.is_admin
     },
     token
   };

@@ -119,7 +119,7 @@ function AppContent() {
     "/goals": <Goals key={`goals-${dataVersion}`} dataVersion={dataVersion} onRefresh={refreshData} />
   };
 
-  if (auth.user?.isAdmin) {
+  if (auth.user?.is_admin) {
     pageMap["/admin"] = <Admin />;
   }
 

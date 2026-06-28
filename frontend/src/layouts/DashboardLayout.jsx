@@ -20,7 +20,7 @@ export default function DashboardLayout({
     { label: "Import", route: "/import" }
   ];
 
-  if (user?.isAdmin) {
+  if (user?.is_admin) {
     navItems.push({ label: "Admin", route: "/admin" });
   }
 
