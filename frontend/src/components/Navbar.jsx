@@ -1,17 +1,24 @@
 import { formatMonthLabel } from "../utils/format.js";
 import { useTheme } from "../context/ThemeContext.jsx";
 
-export default function Navbar({ user, month, onMonthChange, onLogout }) {
+export default function Navbar({ user, month, onMonthChange, onLogout, onToggleSidebar }) {
   const { theme, toggleTheme } = useTheme();
 
   return (
     <header className="topbar">
-      <div>
-        <p className="eyebrow">FinTrack</p>
-        <h1 className="page-title">Personal finance control room</h1>
-        <p className="page-subtitle">
-          {user?.name ? `Signed in as ${user.name}` : "Signed in"} · {formatMonthLabel(month)}
-        </p>
+      <div className="topbar-left">
+        <button type="button" className="hamburger" onClick={onToggleSidebar} aria-label="Toggle menu">
+          <span />
+          <span />
+          <span />
+        </button>
+        <div>
+          <p className="eyebrow">FinTrack</p>
+          <h1 className="page-title">Personal finance control room</h1>
+          <p className="page-subtitle">
+            {user?.name ? `Signed in as ${user.name}` : "Signed in"} · {formatMonthLabel(month)}
+          </p>
+        </div>
       </div>
 
       <div className="topbar-actions">
